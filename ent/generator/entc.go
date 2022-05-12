@@ -10,8 +10,8 @@ import (
 )
 
 func main() {
-	if err := entc.Generate("../../ent/schema", &gen.Config{
-		Target: "../",
+	if err := entc.Generate("../schema", &gen.Config{
+		Target: "../../model/",
 	}); err != nil {
 		log.Fatal("running ent codegen:", err)
 	}

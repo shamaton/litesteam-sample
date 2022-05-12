@@ -2,6 +2,6 @@ up:
 	docker compose up
 
 gen:
-	go generate ./model/codegenerator/
+	go generate ./ent/generator/
 
 PHONY: up

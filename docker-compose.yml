@@ -4,11 +4,12 @@ services:
   minio:
     image: minio/minio:RELEASE.2022-05-08T23-50-31Z
     environment:
-      MINIO_ROOT_USER: "useruseruser"
-      MINIO_ROOT_PASSWORD: "passwordddd"
+      MINIO_ROOT_USER: "user"
+      MINIO_ROOT_PASSWORD: "password"
     command: server /data --console-address :9001
     volumes:
       - ./tmp/minio:/data:cached
+      - ./tmp/certs:/root/.minio/certs
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -19,20 +20,23 @@ services:
       - minio
     entrypoint: >
       /bin/sh -c "
-      until (/usr/bin/mc config host add myminio http://minio:9000 useruseruser passwordddd) do echo '...waiting...' && sleep 1; done;
-      /usr/bin/mc mb myminio/mybucket;
-      /usr/bin/mc policy download myminio/mybucket;
+      until (/usr/bin/mc config host add --insecure myminio https://minio:9000 user password) do echo '...waiting...' && sleep 1; done;
+      /usr/bin/mc mb --insecure myminio/mybucket;
+      /usr/bin/mc policy --insecure download myminio/mybucket;
       exit 0;
       "
 
   litesteam:
     image: litestream/litestream:sha-10e25d7c9eb2524254ad533d9bf55a50ec5ac4d7
-    environment:
-      LITESTREAM_ACCESS_KEY_ID: "useruseruser"
-      LITESTREAM_SECRET_ACCESS_KEY: "passwordddd"
-      AWS_ENDPOINT: http://minio:9000
-    command: replicate /data/db.sqlite s3://mybucket.localhost:9000/db.sqlite
+#    environment:
+#      LITESTREAM_ACCESS_KEY_ID: "useruseruser"
+#      LITESTREAM_SECRET_ACCESS_KEY: "passwordddd"
+#      LITESTREAM_ENDPOINT: minio:9000
+      #LITESTREAM_REGION: ap-notrheast-1
+#    command: replicate /data/db.sqlite s3://mybucket/db.sqlite
+    command: replicate
     volumes:
       - ./tmp/sqlite:/data
+      - ./litestream.yml:/etc/litestream.yml:ro
     depends_on:
       - minio

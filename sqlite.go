@@ -1,9 +1,10 @@
-package litestream_sample
+package main
 
 import (
 	"database/sql"
 	"database/sql/driver"
 	"fmt"
+
 	"modernc.org/sqlite"
 )
 
@@ -26,6 +27,6 @@ func (d sqliteDriver) Open(name string) (driver.Conn, error) {
 	return conn, nil
 }
 
-func init() {
+func registerSQLite() {
 	sql.Register("sqlite3", sqliteDriver{Driver: &sqlite.Driver{}})
 }

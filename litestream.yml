@@ -12,6 +12,8 @@ dbs:
         force-path-style: true
         skip-verify: true
         sync-interval: 1s
+        access-key-id: user
+        secret-access-key: password
 #        url: s3://mybucket/db.sqlite
 #        url: s3://mybucket/db.sqlite
 #        url: http://minio:9000/mybucket

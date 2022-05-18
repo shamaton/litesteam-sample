@@ -1,4 +1,4 @@
-version: '3'
+version: '3.8'
 services:
 
   minio:
@@ -26,11 +26,23 @@ services:
       exit 0;
       "
 
-  litesteam:
+  litesteam-restore:
+    image: litestream/litestream:sha-10e25d7c9eb2524254ad533d9bf55a50ec5ac4d7
+    entrypoint: /bin/sh
+    command: -c "rm -rf /data/* && litestream restore /data/db.sqlite"
+    volumes:
+      - ./tmp/sqlite:/data
+      - ./litestream.yml:/etc/litestream.yml:ro
+    depends_on:
+      minio-client:
+        condition: service_completed_successfully
+
+  litesteam-replicate:
     image: litestream/litestream:sha-10e25d7c9eb2524254ad533d9bf55a50ec5ac4d7
     command: replicate
     volumes:
       - ./tmp/sqlite:/data
       - ./litestream.yml:/etc/litestream.yml:ro
     depends_on:
-      - minio
+      litesteam-restore:
+        condition: service_completed_successfully

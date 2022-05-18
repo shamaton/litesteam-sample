@@ -4,6 +4,8 @@ up:
 down:
 	docker compose down
 
+downup:	down up
+
 gen:
 	go generate ./ent/generator/
 

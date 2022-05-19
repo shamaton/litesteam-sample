@@ -1,4 +1,4 @@
-package main
+package sqlite
 
 import (
 	"database/sql"
@@ -27,6 +27,6 @@ func (d sqliteDriver) Open(name string) (driver.Conn, error) {
 	return conn, nil
 }
 
-func registerSQLite() {
+func RegisterDriver() {
 	sql.Register("sqlite3", sqliteDriver{Driver: &sqlite.Driver{}})
 }

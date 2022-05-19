@@ -9,10 +9,11 @@ import (
 
 	"entgo.io/ent/dialect"
 	"github.com/shamaton/litestream-sample/model"
+	"github.com/shamaton/litestream-sample/sqlite"
 )
 
 func main() {
-	registerSQLite()
+	sqlite.RegisterDriver()
 	client := dbHandler()
 
 	cmd := os.Getenv("CMD")

@@ -1,6 +1,11 @@
 version: '3.8'
 services:
 
+#  app:
+#    build:
+#      context: .
+#      target:
+
   minio:
     image: minio/minio:RELEASE.2022-05-08T23-50-31Z
     environment:
@@ -22,11 +27,9 @@ services:
       /bin/sh -c "
       until (/usr/bin/mc config host add --insecure myminio https://minio:9000 user password) do echo '...waiting...' && sleep 1; done;
       /usr/bin/mc mb --insecure myminio/mybucket;
-      /usr/bin/mc policy --insecure download myminio/mybucket;
       exit 0;
       "
-
-  litesteam-restore:
+  litestream-restore:
     image: litestream/litestream:sha-10e25d7c9eb2524254ad533d9bf55a50ec5ac4d7
     entrypoint: /bin/sh
     command: -c "rm -rf /data/* && litestream restore /data/db.sqlite"
@@ -37,12 +40,12 @@ services:
       minio-client:
         condition: service_completed_successfully
 
-  litesteam-replicate:
+  litestream-replicate:
     image: litestream/litestream:sha-10e25d7c9eb2524254ad533d9bf55a50ec5ac4d7
     command: replicate
     volumes:
       - ./tmp/sqlite:/data
       - ./litestream.yml:/etc/litestream.yml:ro
     depends_on:
-      litesteam-restore:
+      litestream-restore:
         condition: service_completed_successfully

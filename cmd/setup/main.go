@@ -20,6 +20,8 @@ func main() {
 	if err := h.Schema.Create(context.Background()); err != nil {
 		log.Fatalf("failed creating schema resources: %v", err)
 	}
+
+	// remove table
 }
 
 func dbHandler() *model.Client {

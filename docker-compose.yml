@@ -1,11 +1,7 @@
 version: '3.8'
 services:
 
-#  app:
-#    build:
-#      context: .
-#      target:
-
+  # s3
   minio:
     image: minio/minio:RELEASE.2022-05-08T23-50-31Z
     environment:
@@ -19,6 +15,7 @@ services:
       - "9000:9000"
       - "9001:9001"
 
+  # bucket creator
   minio-client:
     image: minio/mc:RELEASE.2022-05-09T04-08-26Z
     depends_on:
@@ -29,6 +26,7 @@ services:
       /usr/bin/mc mb --insecure myminio/mybucket;
       exit 0;
       "
+  # try to restore database
   litestream-restore:
     image: litestream/litestream:sha-10e25d7c9eb2524254ad533d9bf55a50ec5ac4d7
     entrypoint: /bin/sh
@@ -37,9 +35,22 @@ services:
       - ./tmp/sqlite:/data
       - ./litestream.yml:/etc/litestream.yml:ro
     depends_on:
-      minio-client:
-        condition: service_completed_successfully
+      - minio-client
 
+  # my application
+  app:
+    build:
+      context: .
+    volumes:
+      - ./tmp/sqlite:/data
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: curl -s http://localhost:3000/health
+    depends_on:
+      - litestream-restore
+
+  # replicate database
   litestream-replicate:
     image: litestream/litestream:sha-10e25d7c9eb2524254ad533d9bf55a50ec5ac4d7
     command: replicate
@@ -47,5 +58,5 @@ services:
       - ./tmp/sqlite:/data
       - ./litestream.yml:/etc/litestream.yml:ro
     depends_on:
-      litestream-restore:
-        condition: service_completed_successfully
+      app:
+        condition: service_healthy

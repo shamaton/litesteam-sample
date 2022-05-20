@@ -9,11 +9,9 @@ RUN go mod download
 COPY cmd cmd/
 COPY ent ent/
 COPY model model/
-#
-#RUN CGO_ENABLED=0 GOOS=linux go build -o /app/setup ./cmd/setup/
-#
-#FROM gcr.io/distroless/static-debian10 as setup
-#
-#COPY --from=builder /app/setup /setup
-#
-#CMD ["/setup"]
+COPY sqlite sqlite/
+COPY main.go main.go
+
+RUN go build -o main .
+
+CMD ["/app/main"]

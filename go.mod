@@ -4,6 +4,8 @@ go 1.18
 
 require (
 	entgo.io/ent v0.10.1
+	github.com/go-chi/chi v1.5.4
+	github.com/go-chi/chi/v5 v5.0.7
 	modernc.org/sqlite v1.17.2
 )
 

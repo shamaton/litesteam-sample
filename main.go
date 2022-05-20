@@ -2,76 +2,116 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"time"
 
 	"entgo.io/ent/dialect"
+	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/chi/v5"
 	"github.com/shamaton/litestream-sample/model"
 	"github.com/shamaton/litestream-sample/sqlite"
 )
 
+const dbFilePath = "/data/db.sqlite"
+
+var (
+	addr = ":3000"
+)
+
 func main() {
+
+	// whether to create tables
+	shouldCreateTable := false
+	if _, err := os.Stat(dbFilePath); err != nil {
+		shouldCreateTable = true
+	}
+
+	// prepare db handler
 	sqlite.RegisterDriver()
-	client := dbHandler()
-
-	cmd := os.Getenv("CMD")
-	switch cmd {
-	case "create":
-		createTable(client)
-
-	case "insert":
-		insertRecord(client)
-
-	case "select":
-		selectRecord(client)
-	}
-}
-
-func dbHandler() *model.Client {
-
-	if err := os.MkdirAll("tmp/sqlite", 0777); err != nil {
-		log.Fatalf("failed creating directory: %v", err)
-	}
-
-	var options []model.Option
-	options = append(options, model.Debug())
-	client, err := model.Open(dialect.SQLite, "file:./tmp/sqlite/db.sqlite?cache=shared", options...)
+	dbh, err := model.Open(dialect.SQLite, "file:"+dbFilePath+"?cache=shared", model.Debug())
 	if err != nil {
 		log.Fatalf("failed opening connection to sqlite: %v", err)
 	}
-	return client
-}
 
-func createTable(client *model.Client) {
+	// create table
+	if shouldCreateTable {
+		if err := dbh.Schema.Create(context.Background()); err != nil {
+			log.Fatalf("failed creating schema resources: %v", err)
+		}
+		log.Println("created tables.")
+	}
 
-	defer client.Close()
-	if err := client.Schema.Create(context.Background()); err != nil {
-		log.Fatalf("failed creating schema resources: %v", err)
+	// prepare server
+	h := handler{dbh: dbh}
+	r := chi.NewRouter()
+	r.Use(middleware.Logger)
+	r.Get("/insert", h.InsertRecord)
+	r.Get("/select", h.SelectRecord)
+	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
+	// start server
+	log.Println("server start", addr)
+	if err := http.ListenAndServe(addr, r); err != nil {
+		log.Fatal(err)
 	}
 }
 
-func insertRecord(client *model.Client) {
-	ctx := context.Background()
-	user, err := client.User.
+type handler struct {
+	dbh *model.Client
+}
+
+func (h handler) InsertRecord(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	user, err := h.dbh.User.
 		Create().
-		SetAge(20).
+		SetAge(int(time.Now().UnixNano() % 100)).
 		SetName(fmt.Sprintf("at%d", time.Now().Unix())).
 		Save(ctx)
+
 	if err != nil {
-		log.Fatalf("failed creating user: %v", err)
+		writeError(w, fmt.Sprintf("failed creating user: %v", err))
+		return
 	}
-	log.Println("user was created: ", user)
+
+	writeJSON(w, user)
 }
 
-func selectRecord(client *model.Client) {
-	ctx := context.Background()
-	users, err := client.User.Query().All(ctx)
+func (h handler) SelectRecord(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	users, err := h.dbh.User.Query().All(ctx)
 	if err != nil {
-		log.Fatalf("failed selecting users: %v", err)
+		writeError(w, fmt.Sprintf("failed selecting users: %v", err))
+		return
 	}
-	for _, user := range users {
-		log.Println("user :", user.String())
+	writeJSON(w, users)
+}
+
+func writeJSON(w http.ResponseWriter, v any) {
+
+	b, err := json.Marshal(v)
+	if err != nil {
+		writeError(w, fmt.Sprintf("failed unmarshaling: %v", err))
+		return
+	}
+
+	writeResponse(w, http.StatusOK, b)
+}
+
+func writeError(w http.ResponseWriter, message string) {
+	writeResponse(w, http.StatusInternalServerError, []byte(message))
+}
+
+func writeResponse(w http.ResponseWriter, code int, b []byte) {
+	w.WriteHeader(code)
+	if _, err := w.Write(b); err != nil {
+		log.Printf("failed writing response: %v\n", err)
 	}
 }

@@ -11,8 +11,8 @@ import (
 
 func main() {
 	if err := entc.Generate("../schema", &gen.Config{
-		Target:  "../../model/",
-		Package: "github.com/shamaton/litestream-sample/model",
+		Target:  "../../db/",
+		Package: "github.com/shamaton/litestream-sample/db",
 	}); err != nil {
 		log.Fatal("running ent codegen:", err)
 	}

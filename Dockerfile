@@ -6,9 +6,8 @@ COPY go.mod .
 COPY go.sum .
 RUN go mod download
 
-COPY cmd cmd/
 COPY ent ent/
-COPY model model/
+COPY db db/
 COPY sqlite sqlite/
 COPY main.go main.go
 

@@ -12,7 +12,7 @@ import (
 	"entgo.io/ent/dialect"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
-	"github.com/shamaton/litestream-sample/model"
+	"github.com/shamaton/litestream-sample/db"
 	"github.com/shamaton/litestream-sample/sqlite"
 )
 
@@ -32,7 +32,7 @@ func main() {
 
 	// prepare db handler
 	sqlite.RegisterDriver()
-	dbh, err := model.Open(dialect.SQLite, "file:"+dbFilePath+"?cache=shared", model.Debug())
+	dbh, err := db.Open(dialect.SQLite, "file:"+dbFilePath+"?cache=shared", db.Debug())
 	if err != nil {
 		log.Fatalf("failed opening connection to sqlite: %v", err)
 	}
@@ -63,7 +63,7 @@ func main() {
 }
 
 type handler struct {
-	dbh *model.Client
+	dbh *db.Client
 }
 
 func (h handler) InsertRecord(w http.ResponseWriter, r *http.Request) {

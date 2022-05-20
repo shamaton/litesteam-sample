@@ -4,7 +4,7 @@ package user
 
 import (
 	"entgo.io/ent/dialect/sql"
-	"github.com/shamaton/litestream-sample/model/predicate"
+	"github.com/shamaton/litestream-sample/db/predicate"
 )
 
 // ID filters vertices based on their ID field.

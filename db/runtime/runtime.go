@@ -2,7 +2,7 @@
 
 package runtime
 
-// The schema-stitching logic is generated in github.com/shamaton/litestream-sample/model/runtime.go
+// The schema-stitching logic is generated in github.com/shamaton/litestream-sample/db/runtime.go
 
 const (
 	Version = "v0.10.1"                                         // Version of ent codegen.

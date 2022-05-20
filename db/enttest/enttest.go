@@ -5,9 +5,9 @@ package enttest
 import (
 	"context"
 
-	"github.com/shamaton/litestream-sample/model"
+	"github.com/shamaton/litestream-sample/db"
 	// required by schema hooks.
-	_ "github.com/shamaton/litestream-sample/model/runtime"
+	_ "github.com/shamaton/litestream-sample/db/runtime"
 
 	"entgo.io/ent/dialect/sql/schema"
 )
@@ -24,13 +24,13 @@ type (
 	Option func(*options)
 
 	options struct {
-		opts        []model.Option
+		opts        []db.Option
 		migrateOpts []schema.MigrateOption
 	}
 )
 
 // WithOptions forwards options to client creation.
-func WithOptions(opts ...model.Option) Option {
+func WithOptions(opts ...db.Option) Option {
 	return func(o *options) {
 		o.opts = append(o.opts, opts...)
 	}
@@ -51,10 +51,10 @@ func newOptions(opts []Option) *options {
 	return o
 }
 
-// Open calls model.Open and auto-run migration.
-func Open(t TestingT, driverName, dataSourceName string, opts ...Option) *model.Client {
+// Open calls db.Open and auto-run migration.
+func Open(t TestingT, driverName, dataSourceName string, opts ...Option) *db.Client {
 	o := newOptions(opts)
-	c, err := model.Open(driverName, dataSourceName, o.opts...)
+	c, err := db.Open(driverName, dataSourceName, o.opts...)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
@@ -66,10 +66,10 @@ func Open(t TestingT, driverName, dataSourceName string, opts ...Option) *model.
 	return c
 }
 
-// NewClient calls model.NewClient and auto-run migration.
-func NewClient(t TestingT, opts ...Option) *model.Client {
+// NewClient calls db.NewClient and auto-run migration.
+func NewClient(t TestingT, opts ...Option) *db.Client {
 	o := newOptions(opts)
-	c := model.NewClient(o.opts...)
+	c := db.NewClient(o.opts...)
 	if err := c.Schema.Create(context.Background(), o.migrateOpts...); err != nil {
 		t.Error(err)
 		t.FailNow()

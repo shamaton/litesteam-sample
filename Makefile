@@ -1,5 +1,5 @@
 up:
-	bash -c "trap 'docker compose down; exit 0' EXIT; docker compose up --remove-orphans"
+	bash -c "trap 'docker compose down; exit 0' EXIT; docker compose up"
 
 build:
 	docker compose build

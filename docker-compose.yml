@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3'
 services:
 
   # s3
@@ -21,21 +21,19 @@ services:
     depends_on:
       - minio
     entrypoint: >
-      /bin/sh -c "
-      until (/usr/bin/mc config host add --insecure myminio https://minio:9000 user password) do echo '...waiting...' && sleep 1; done;
-      /usr/bin/mc mb --insecure myminio/mybucket;
-      exit 0;
-      "
+      /bin/sh -c " until (/usr/bin/mc config host add --insecure myminio https://minio:9000 user password) do echo '...waiting...' && sleep 1; done; /usr/bin/mc mb --insecure myminio/mybucket; exit 0; "
+
   # try to restore database
   litestream-restore:
     image: litestream/litestream:sha-10e25d7c9eb2524254ad533d9bf55a50ec5ac4d7
     entrypoint: /bin/sh
-    command: -c "rm -rf /data/* && litestream restore /data/db.sqlite"
+    command: -c "rm -rf /data/*; litestream restore /data/db.sqlite; exit 0;"
     volumes:
       - ./tmp/sqlite:/data
       - ./litestream.yml:/etc/litestream.yml:ro
     depends_on:
-      - minio-client
+      minio-client:
+        condition: service_completed_successfully
 
   # my application
   app:
@@ -48,7 +46,8 @@ services:
     healthcheck:
       test: curl -s http://localhost:3000/health
     depends_on:
-      - litestream-restore
+      litestream-restore:
+        condition: service_completed_successfully
 
   # replicate database
   litestream-replicate:

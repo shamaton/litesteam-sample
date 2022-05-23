@@ -1,11 +1,6 @@
-access-key-id:     user
-secret-access-key: password
-endpoint: minio:9000
-
 dbs:
   - path: /data/db.sqlite
     replicas:
-#      - url: s3://mybucket.minio:9000/db.sqlite
       - type: s3
         bucket: mybucket
         endpoint: minio:9000
@@ -14,6 +9,3 @@ dbs:
         sync-interval: 1s
         access-key-id: user
         secret-access-key: password
-#        url: s3://mybucket/db.sqlite
-#        url: s3://mybucket/db.sqlite
-#        url: http://minio:9000/mybucket
